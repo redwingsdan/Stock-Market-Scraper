@@ -20,32 +20,16 @@ class Stock:
         
 def populate_stocks(stocks):
     print('Populating stocks...')
-    stocks.append( Stock('KHC', 42) )
-    stocks.append( Stock('MCD', 10.056) )
-    stocks.append( Stock('T', 71.3165) )
-    stocks.append( Stock('INTC', 98.6304) )
-    stocks.append( Stock('JNJ', 33.2222) )
-    stocks.append( Stock('KO', 98.816) )
-    stocks.append( Stock('MSFT', 24.0577) )
-    
-    stocks.append( Stock('AMD', 35) )
-    stocks.append( Stock('AMZN', 2) )
-    stocks.append( Stock('AAPL', 28.097) )
-    stocks.append( Stock('AMAT', 44.174) )
-    stocks.append( Stock('CSGP', 1) )
-    stocks.append( Stock('COST', 4.007) )
-    stocks.append( Stock('GIS', 45.384) )
-    stocks.append( Stock('GMHI', 30) )
-    stocks.append( Stock('IBM', 23.306) )
-    stocks.append( Stock('NKE', 28.054) )
-    stocks.append( Stock('PENN', 63) )
-    stocks.append( Stock('SPCE', 15) )
-    stocks.append( Stock('V', 13.018) )
-    stocks.append( Stock('WMT', 22.094) )
-    stocks.append( Stock('WELL', 55.119) )
-    stocks.append( Stock('WYND', 111.055) )
-    for stock in stocks:
-        print('Added stock', stock.get_stock_name())
+    csvFileName = 'csv_owned_stocks.csv'
+    with open(csvFileName, newline='') as csvfile:
+        r = csv.reader(csvfile)
+        existingData = [line for line in r]
+    #Add stocks from the read csv file
+    for colIndex in range(len(existingData[0])):
+        #For each header, add a stock using the header and the corresponding value
+        stockToAdd = Stock(existingData[0][colIndex], Decimal(existingData[1][colIndex]))
+        stocks.append(stockToAdd)
+        print('Added stock', stockToAdd.get_stock_name())
 
 def writer (header, data, filename, option):
     if option == 'write':
@@ -72,6 +56,11 @@ def updater(filename, newData, newHeaders):
         w.writerow(newHeaders)
         w.writerows(existingData)
     #append the new data after the existing data
+    totalIndex = newHeaders.index('Total') #Use the change column index
+    priceChange = newData[totalIndex] - Decimal(existingData[-1][totalIndex])
+    percentageChange = None if Decimal(existingData[-1][totalIndex]) == 0 else (priceChange / Decimal(existingData[-1][totalIndex])) * 100
+    changeIndex = newHeaders.index('Change (%)') #Use the change column index
+    newData.insert(changeIndex, str(priceChange) + ' (' + str(format(percentageChange, '.2f')) + '%)')
     writer(None, newData, filename, 'update')
     
 def load_stock_data(t):
@@ -100,20 +89,22 @@ def load_stock_data(t):
         for levels in range(5):
             stock_price = list(stock_price.children)[0]
         stock.price = stock_price.get_text()
-        print('Valued at:', str(stock.get_value()));
     #Export the price info to an excel doc
     csvFileName = 'csv_stock_prices.csv'
-    csvHeader = ['Date', 'Total'] + list(map(lambda s: s.name, stocks))
+    csvHeader = ['Date', 'Total', 'Change (%)'] + list(map(lambda s: s.name, stocks))
     today = date.today()
     formattedDate = today.strftime("%m/%d/%y")
     csvData = list()
     csvData.append(str(formattedDate))
     csvData.append(sum(list(map(lambda s: s.get_value(), stocks)))) #total row
     csvData.extend(list(map(lambda s: str(s.get_value()), stocks)))
-    #writer(csvHeader, csvData, csvFileName, 'write')
     updater(csvFileName, csvData, csvHeader)
+    print('Finished loading stock data for', formattedDate)
 
-schedule.every().day.at("12:00").do(load_stock_data, 'Loading stock data')
+schedule.every().day.at("16:00").do(load_stock_data, 'Loading stock data')
 while True:
     schedule.run_pending()
     time.sleep(60) # wait one minute
+#Use this call instead of the scheduler to test
+#Replace the input CSV to test using different data
+#load_stock_data(None) 
