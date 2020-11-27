@@ -106,5 +106,5 @@ while True:
     schedule.run_pending()
     time.sleep(60) # wait one minute
 #Use this call instead of the scheduler to test
-#Replace the input CSV to test using new data
+#Replace the input CSV to test using different data
 #load_stock_data(None) 
