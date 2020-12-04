@@ -104,6 +104,7 @@ def load_stock_data(t):
 schedule.every().day.at("16:00").do(load_stock_data, 'Loading stock data')
 while True:
     schedule.run_pending()
+    print('Waiting to load data')
     time.sleep(60) # wait one minute
 #Use this call instead of the scheduler to test
 #Replace the input CSV to test using different data
