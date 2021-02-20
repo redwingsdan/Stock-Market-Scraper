@@ -97,7 +97,6 @@ def load_stock_data(t):
     dayOfWeek = date.today().weekday()
     if dayOfWeek >= 5:
         return
-    populate_stocks(stocks);
     #Get the price info for all the populated stocks
     asyncio.get_event_loop().run_until_complete(download_all_stocks())
     #Export the price info to an excel doc
@@ -115,6 +114,7 @@ def load_stock_data(t):
 base_url = "https://www.google.com/finance/quote/"
 exchange_types = ['NASDAQ', 'NYSE']
 stocks = []
+populate_stocks(stocks);
 schedule.every().day.at("16:00").do(load_stock_data, 'Loading stock data')
 while True:
     schedule.run_pending()
